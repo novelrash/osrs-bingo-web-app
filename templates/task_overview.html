@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Quest Overview{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>📜 Quest Overview</h3>
+                <a href="{{ url_for('add_task') }}" class="btn btn-primary">📋 Add New Quest</a>
+            </div>
+            <div class="card-body">
+                <!-- Search and Filter Controls -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <form method="GET" class="d-flex">
+                            <input type="text" class="form-control me-2" name="search" 
+                                   value="{{ search }}" placeholder="Search quests by name or description..."
+                                   style="border-radius: 6px 0 0 6px;">
+                            <input type="hidden" name="sort" value="{{ sort_by }}">
+                            <input type="hidden" name="order" value="{{ order }}">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 0 6px 6px 0;">
+                                🔍 Search
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <span class="me-2" style="color: var(--rs-dark-brown); font-weight: 500;">Sort by:</span>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('task_overview', search=search, sort='name', order='asc') }}" 
+                                   class="btn btn-sm {% if sort_by == 'name' and order == 'asc' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                                    📝 Name ↑
+                                </a>
+                                <a href="{{ url_for('task_overview', search=search, sort='points', order='asc') }}" 
+                                   class="btn btn-sm {% if sort_by == 'points' and order == 'asc' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                                    ⭐ XP ↑
+                                </a>
+                                <a href="{{ url_for('task_overview', search=search, sort='points', order='desc') }}" 
+                                   class="btn btn-sm {% if sort_by == 'points' and order == 'desc' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                                    ⭐ XP ↓
+                                </a>
+                                <a href="{{ url_for('task_overview', search=search, sort='completions', order='desc') }}" 
+                                   class="btn btn-sm {% if sort_by == 'completions' and order == 'desc' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                                    🏆 Popular
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Summary -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span style="color: var(--rs-light-brown);">
+                                {% if search %}
+                                    Found {{ tasks|length }} quest(s) matching "{{ search }}"
+                                {% else %}
+                                    Showing all {{ tasks|length }} quests
+                                {% endif %}
+                            </span>
+                            {% if search %}
+                            <a href="{{ url_for('task_overview') }}" class="btn btn-sm btn-outline-secondary">
+                                ❌ Clear Search
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if tasks %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Quest
+                                    {% if sort_by == 'name' %}
+                                        {% if order == 'asc' %}↑{% else %}↓{% endif %}
+                                    {% endif %}
+                                </th>
+                                <th>
+                                    XP Reward
+                                    {% if sort_by == 'points' %}
+                                        {% if order == 'asc' %}↑{% else %}↓{% endif %}
+                                    {% endif %}
+                                </th>
+                                <th>
+                                    Completions
+                                    {% if sort_by == 'completions' %}
+                                        {% if order == 'asc' %}↑{% else %}↓{% endif %}
+                                    {% endif %}
+                                </th>
+                                <th>Difficulty</th>
+                                <th>Recent Completions</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ task.name }}</strong>
+                                        {% if task.description %}
+                                        <br><small class="text-muted">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="gold" style="font-weight: 600; font-size: 1.1em;">
+                                        {{ task.points }} XP
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background: var(--rs-gold); color: var(--rs-dark-brown); font-size: 0.9em;">
+                                        {{ task_completions[task.id].completion_count }} times
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if task.points <= 25 %}
+                                        <span class="badge" style="background: var(--rs-green); color: white;">Easy</span>
+                                    {% elif task.points <= 75 %}
+                                        <span class="badge" style="background: var(--rs-gold); color: var(--rs-dark-brown);">Medium</span>
+                                    {% elif task.points <= 150 %}
+                                        <span class="badge" style="background: var(--rs-bronze); color: white;">Hard</span>
+                                    {% else %}
+                                        <span class="badge" style="background: var(--rs-dark-red); color: white;">Epic</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task_completions[task.id].completions %}
+                                        {% for completion in task_completions[task.id].completions[-3:] %}
+                                            <small>
+                                                <a href="{{ url_for('competitor_details', competitor_id=completion.competitor.id) }}" 
+                                                   style="color: var(--rs-dark-brown); text-decoration: none;">
+                                                    {{ completion.competitor.name }}
+                                                </a>
+                                                <span class="text-muted">({{ completion.completed_at.strftime('%m/%d') }})</span>
+                                                {% if not loop.last %}<br>{% endif %}
+                                            </small>
+                                        {% endfor %}
+                                        {% if task_completions[task.id].completions|length > 3 %}
+                                            <br><small class="text-muted">+{{ task_completions[task.id].completions|length - 3 }} more</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <small class="text-muted">No completions yet</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group-vertical btn-group-sm">
+                                        <a href="{{ url_for('edit_task', task_id=task.id) }}" 
+                                           class="btn btn-outline-primary btn-sm" title="Edit quest">
+                                            ✏️ Edit
+                                        </a>
+                                        {% if task_completions[task.id].completion_count == 0 %}
+                                        <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Delete {{ task.name }}? This cannot be undone!')">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete quest">
+                                                🗑️ Delete
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <button class="btn btn-outline-secondary btn-sm" disabled title="Cannot delete quest with completions">
+                                            🔒 Protected
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <h5 style="color: var(--rs-light-brown);">
+                        {% if search %}
+                            No quests found matching "{{ search }}"
+                        {% else %}
+                            No quests available
+                        {% endif %}
+                    </h5>
+                    <p>
+                        {% if search %}
+                            Try a different search term or <a href="{{ url_for('task_overview') }}">view all quests</a>
+                        {% else %}
+                            Create your first quest to get started!
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('add_task') }}" class="btn btn-primary">
+                        📋 Add New Quest
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quest Statistics -->
+{% if tasks %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">{{ tasks|length }}</h4>
+                <p class="mb-0">Total Quests</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">{{ tasks|sum(attribute='points') }}</h4>
+                <p class="mb-0">Total XP Available</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">
+                    {% set total_completions = task_completions.values()|sum(attribute='completion_count') %}
+                    {{ total_completions }}
+                </h4>
+                <p class="mb-0">Total Completions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">
+                    {% if tasks %}
+                        {{ "%.0f"|format(tasks|sum(attribute='points') / tasks|length) }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </h4>
+                <p class="mb-0">Average XP</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- XP Distribution Chart -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Quest XP Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="xpDistributionChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if tasks %}
+<script>
+// XP Distribution Chart
+const ctx = document.getElementById('xpDistributionChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [{% for task in tasks %}'{{ task.name[:20] }}{% if task.name|length > 20 %}...{% endif %}',{% endfor %}],
+        datasets: [{
+            label: 'XP Reward',
+            data: [{% for task in tasks %}{{ task.points }},{% endfor %}],
+            backgroundColor: function(context) {
+                const value = context.parsed.y;
+                if (value <= 25) return 'rgba(34, 139, 34, 0.7)';      // Green - Easy
+                else if (value <= 75) return 'rgba(212, 175, 55, 0.7)'; // Gold - Medium  
+                else if (value <= 150) return 'rgba(205, 127, 50, 0.7)'; // Bronze - Hard
+                else return 'rgba(139, 0, 0, 0.7)';                      // Red - Epic
+            },
+            borderColor: function(context) {
+                const value = context.parsed.y;
+                if (value <= 25) return 'rgba(34, 139, 34, 1)';
+                else if (value <= 75) return 'rgba(212, 175, 55, 1)';
+                else if (value <= 150) return 'rgba(205, 127, 50, 1)';
+                else return 'rgba(139, 0, 0, 1)';
+            },
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#2c1810',
+                    font: {
+                        family: 'Cinzel',
+                        weight: '600'
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#2c1810',
+                    font: {
+                        family: 'Cinzel',
+                        weight: '500'
+                    }
+                },
+                grid: {
+                    color: 'rgba(44, 24, 16, 0.2)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#2c1810',
+                    font: {
+                        family: 'Cinzel',
+                        weight: '500'
+                    },
+                    maxRotation: 45
+                },
+                grid: {
+                    color: 'rgba(44, 24, 16, 0.2)'
+                }
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

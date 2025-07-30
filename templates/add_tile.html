@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Add Tile - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>🎯 Add New Bingo Tile</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="tile_input" class="form-label">Tile Names with Points *</label>
+                        <textarea class="form-control" id="tile_input" name="tile_input" rows="4" required
+                                  placeholder="Enter tiles with points. Examples:&#10;Get 99 Cooking (5)&#10;Complete Dragon Slayer:3&#10;Kill Jad (15)&#10;Mine 1000 Iron Ore:2"></textarea>
+                        <div class="form-text">
+                            <strong>Formats supported:</strong><br>
+                            • <code>Tile Name (points)</code> - e.g., "Get 99 Cooking (5)"<br>
+                            • <code>Tile Name:points</code> - e.g., "Kill Jad:15"<br>
+                            • <code>Tile Name</code> - defaults to 1 point<br>
+                            • Separate multiple tiles with commas
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"
+                                  placeholder="Optional: Add a description that applies to all tiles..."></textarea>
+                        <div class="form-text">This description will be applied to all tiles being created</div>
+                    </div>
+
+                    <!-- Point Value Guide -->
+                    <div class="mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>💡 Point Value Guidelines</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong class="text-success">Easy (1-3 points):</strong>
+                                        <ul class="small mb-2">
+                                            <li>Basic skill achievements</li>
+                                            <li>Simple quests</li>
+                                            <li>Common activities</li>
+                                        </ul>
+                                        
+                                        <strong class="text-warning">Medium (4-7 points):</strong>
+                                        <ul class="small">
+                                            <li>Intermediate goals</li>
+                                            <li>Moderate time investment</li>
+                                            <li>Some skill required</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong class="text-danger">Hard (8-15 points):</strong>
+                                        <ul class="small mb-2">
+                                            <li>Challenging achievements</li>
+                                            <li>High-level content</li>
+                                            <li>Significant time/skill</li>
+                                        </ul>
+                                        
+                                        <strong class="text-dark">Epic (16+ points):</strong>
+                                        <ul class="small">
+                                            <li>Extremely difficult</li>
+                                            <li>End-game content</li>
+                                            <li>Major accomplishments</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add Tile(s)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Example Tiles -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>💡 Bulk Import Examples</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Format Examples:</h6>
+                        <div class="bg-light p-2 rounded mb-3">
+                            <code>Get 99 Cooking (5), Kill Jad:15, Mine 1000 Iron Ore (2)</code>
+                        </div>
+                        
+                        <h6 class="text-info">Easy Tiles (1-3 pts):</h6>
+                        <div class="bg-light p-2 rounded mb-3 small">
+                            <code>Reach level 30 in any skill (2),<br>
+                            Complete Cook's Assistant:1,<br>
+                            Mine 100 iron ore (2)</code>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Medium Tiles (4-7 pts):</h6>
+                        <div class="bg-light p-2 rounded mb-3 small">
+                            <code>Get 60 Attack (5),<br>
+                            Complete Monkey Madness:6,<br>
+                            Earn 100k GP (4)</code>
+                        </div>
+                        
+                        <h6 class="text-danger">Hard/Epic Tiles (8+ pts):</h6>
+                        <div class="bg-light p-2 rounded mb-3 small">
+                            <code>Get 99 in any skill (12),<br>
+                            Complete Inferno:25,<br>
+                            Kill Jad (15)</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>💡 Tips:</strong>
+                    <ul class="mb-0 small">
+                        <li>Use parentheses <code>(5)</code> or colon <code>:5</code> to specify points</li>
+                        <li>Tiles without points default to 1 point</li>
+                        <li>Separate multiple tiles with commas</li>
+                        <li>Points must be between 1-100</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

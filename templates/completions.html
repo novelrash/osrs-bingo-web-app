@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Quest Completions{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>📜 Quest Completion History</h3>
+                <div>
+                    <a href="{{ url_for('bulk_complete_task') }}" class="btn btn-primary">
+                        ⚡ Bulk Complete
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if completions.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Adventurer</th>
+                                <th>Team</th>
+                                <th>Quest</th>
+                                <th>XP Gained</th>
+                                <th>Completed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in completions.items %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('competitor_details', competitor_id=completion.competitor.id) }}" 
+                                       style="color: var(--rs-dark-brown); text-decoration: none;">
+                                        <strong>{{ completion.competitor.name }}</strong>
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('team_details', team_id=completion.competitor.team.id) }}" 
+                                       style="color: var(--rs-dark-brown); text-decoration: none;">
+                                        {{ completion.competitor.team.name }}
+                                    </a>
+                                </td>
+                                <td>{{ completion.task.name }}</td>
+                                <td><span class="gold">{{ completion.task.points }} XP</span></td>
+                                <td>{{ completion.completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('delete_completion', completion_id=completion.id) }}" 
+                                          style="display: inline;"
+                                          onsubmit="return confirm('Are you sure you want to remove this completion?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                title="Remove completion">
+                                            🗑️ Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if completions.pages > 1 %}
+                <nav aria-label="Completions pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if completions.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('view_completions', page=completions.prev_num) }}">
+                                ← Previous
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in completions.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != completions.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('view_completions', page=page_num) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if completions.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('view_completions', page=completions.next_num) }}">
+                                Next →
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                <div class="text-center mt-3">
+                    <small style="color: var(--rs-light-brown);">
+                        Showing {{ completions.items|length }} of {{ completions.total }} completions
+                        (Page {{ completions.page }} of {{ completions.pages }})
+                    </small>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <h5 style="color: var(--rs-light-brown);">No quest completions yet</h5>
+                    <p>Start completing quests to see them here!</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        🏠 Go to Leaderboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">{{ completions.total }}</h4>
+                <p class="mb-0">Total Completions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">
+                    {% set total_xp = completions.items | sum(attribute='task.points') %}
+                    {{ total_xp }}
+                </h4>
+                <p class="mb-0">XP on This Page</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">{{ completions.pages }}</h4>
+                <p class="mb-0">Total Pages</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

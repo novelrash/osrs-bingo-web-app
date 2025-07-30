@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Pea Kingdom Bingo Leaderboard{% endblock %}
+
+{% block content %}
+<h1 class="leaderboard-title">🏆 Bingo Leaderboard 🏆</h1>
+
+<div class="row">
+    <!-- Team Rankings -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>🛡️ Team Rankings</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Team</th>
+                                <th>Points</th>
+                                <th>Tiles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                            <tr>
+                                <td>
+                                    <span class="rank-badge rank-{{ loop.index }}">{{ loop.index }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('team_details', team_id=team.id) }}" class="team-link">
+                                        {{ team.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ team.total_points }}</span>
+                                </td>
+                                <td>
+                                    <span class="tiles-count">{{ team.completed_tiles_count }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    No teams yet. Admin can add teams to get started!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Individual Rankings -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>⚔️ Individual Rankings</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Team</th>
+                                <th>Points</th>
+                                <th>Tiles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for competitor in competitors %}
+                            <tr>
+                                <td>
+                                    <span class="rank-badge rank-{{ loop.index }}">{{ loop.index }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('competitor_details', competitor_id=competitor.id) }}" class="competitor-link">
+                                        {{ competitor.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="team-name">{{ competitor.team.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ competitor.total_points }}</span>
+                                </td>
+                                <td>
+                                    <span class="tiles-count">{{ competitor.completed_tiles|length }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    No players yet. Admin can add players to get started!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Controls -->
+{% if request.is_admin %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card admin-controls">
+            <div class="card-header">
+                <h4>🔧 Admin Controls</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('add_team') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Add Team
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('add_competitor') }}" class="btn btn-success w-100">
+                            <i class="fas fa-user-plus"></i> Add Player
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('add_tile') }}" class="btn btn-info w-100">
+                            <i class="fas fa-tasks"></i> Add Tile
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Tile Completion -->
+                {% if competitors and tiles %}
+                <div class="mt-4">
+                    <h5>⚡ Quick Tile Completion</h5>
+                    <form method="POST" action="{{ url_for('complete_tile') }}" class="row">
+                        <div class="col-md-4">
+                            <select name="competitor_id" class="form-control" required>
+                                <option value="">Select Player...</option>
+                                {% for competitor in competitors %}
+                                <option value="{{ competitor.id }}">{{ competitor.name }} ({{ competitor.team.name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="tile_id" class="form-control" required>
+                                <option value="">Select Tile...</option>
+                                {% for tile in tiles %}
+                                <option value="{{ tile.id }}">{{ tile.name }} ({{ tile.points }} pts)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-check"></i> Complete Tile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Bingo Information -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>🎯 About Pea Kingdom Bingo</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-trophy"></i> How It Works</h6>
+                        <ul class="small">
+                            <li>Complete bingo tiles to earn points</li>
+                            <li>Each tile has a different point value</li>
+                            <li>Team scores are the sum of all members</li>
+                            <li>Individual rankings track personal progress</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-users"></i> Team Play</h6>
+                        <ul class="small">
+                            <li>Join a team to compete together</li>
+                            <li>Team rankings show combined effort</li>
+                            <li>Support your teammates</li>
+                            <li>Coordinate tile completions</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-chart-line"></i> Progress Tracking</h6>
+                        <ul class="small">
+                            <li>Real-time leaderboard updates</li>
+                            <li>View individual player progress</li>
+                            <li>Track team performance</li>
+                            <li>See tile completion statistics</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Last Update Info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <small class="text-muted">
+                    <i class="fas fa-clock"></i> Last updated: {{ last_update.strftime('%Y-%m-%d %H:%M:%S UTC') if last_update else 'Never' }}
+                    {% if tiles|length > 0 %}
+                    | <i class="fas fa-tasks"></i> {{ tiles|length }} tiles available
+                    {% endif %}
+                    {% if competitors|length > 0 %}
+                    | <i class="fas fa-users"></i> {{ competitors|length }} players competing
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

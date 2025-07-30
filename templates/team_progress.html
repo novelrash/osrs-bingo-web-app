@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.name }} Progress - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="leaderboard-title">🛡️ {{ team.name }} Progress</h1>
+        <div class="text-center mb-4">
+            <span class="badge bg-success fs-6">{{ team.total_points }} Points</span>
+            <span class="badge bg-info fs-6">{{ team.completed_tiles_count }} Tiles Completed</span>
+            <span class="badge bg-primary fs-6">{{ team.competitors|length }} Players</span>
+            {% if pending_completions %}
+            <span class="badge bg-warning fs-6">{{ pending_completions|length }} Pending Approval</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="row mb-3">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Leaderboard
+        </a>
+        <a href="{{ url_for('submit_completion') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Submit New Completion
+        </a>
+    </div>
+</div>
+
+<!-- Team Members -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>👥 Team Members</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for member in team.competitors %}
+                    <div class="col-md-3 mb-2">
+                        {% if member.name == player.name %}
+                        <div class="card border-success">
+                            <div class="card-body text-center py-2">
+                                <strong>{{ member.name }}</strong>
+                                <br><small class="text-success">← You</small>
+                            </div>
+                        </div>
+                        {% else %}
+                        <a href="{{ url_for('team_progress', player_name=member.name) }}" class="text-decoration-none">
+                            <div class="card border-primary" style="cursor: pointer;">
+                                <div class="card-body text-center py-2">
+                                    <strong class="text-primary">{{ member.name }}</strong>
+                                    <br><small class="text-muted">Click to view</small>
+                                </div>
+                            </div>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Overview -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>✅ Completed Tiles ({{ team.completed_tiles_count }})</h4>
+            </div>
+            <div class="card-body">
+                {% if team.completed_tiles %}
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Tile</th>
+                                <th>Points</th>
+                                <th>Completed</th>
+                                <th>By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in team.completed_tiles|sort(attribute='completed_at', reverse=true) %}
+                            {% if completion.admin_approved %}
+                            <tr>
+                                <td>
+                                    <strong>{{ completion.tile.name }}</strong>
+                                    {% if completion.tile.description %}
+                                    <br><small class="text-muted">{{ completion.tile.description[:50] }}{% if completion.tile.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ completion.tile.points }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ completion.completed_at.strftime('%m/%d %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    {% if completion.submitted_by_player %}
+                                    <small>{{ completion.submitted_by_player.name }}</small>
+                                    {% else %}
+                                    <small class="text-muted">Admin</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-tasks fa-3x mb-3"></i>
+                    <p>No tiles completed yet. Be the first to submit one!</p>
+                    <a href="{{ url_for('submit_completion') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Submit First Completion
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>🎯 Available Tiles</h4>
+            </div>
+            <div class="card-body">
+                {% set available_tiles = all_tiles|rejectattr('id', 'in', completed_tile_ids)|list %}
+                {% if available_tiles %}
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Tile</th>
+                                <th>Points</th>
+                                <th>Difficulty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tile in available_tiles|sort(attribute='points') %}
+                            <tr>
+                                <td>
+                                    <strong>{{ tile.name }}</strong>
+                                    {% if tile.description %}
+                                    <br><small class="text-muted">{{ tile.description[:50] }}{% if tile.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ tile.points }}</span>
+                                </td>
+                                <td>
+                                    {% if tile.points <= 3 %}
+                                        <span class="badge bg-success">Easy</span>
+                                    {% elif tile.points <= 7 %}
+                                        <span class="badge bg-warning">Medium</span>
+                                    {% elif tile.points <= 15 %}
+                                        <span class="badge bg-danger">Hard</span>
+                                    {% else %}
+                                        <span class="badge bg-dark">Epic</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-trophy fa-3x mb-3"></i>
+                    <p>All tiles completed! Amazing work!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Approvals -->
+{% if pending_completions %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>⏳ Pending Admin Approval ({{ pending_completions|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Tile</th>
+                                <th>Points</th>
+                                <th>Submitted</th>
+                                <th>By</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in pending_completions|sort(attribute='completed_at', reverse=true) %}
+                            <tr>
+                                <td>
+                                    <strong>{{ completion.tile.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ completion.tile.points }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ completion.completed_at.strftime('%m/%d %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    {{ completion.submitted_by_player.name if completion.submitted_by_player else 'Admin' }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">Pending</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <small><i class="fas fa-info-circle"></i> These completions are waiting for admin approval. Points will be added once approved.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Progress Statistics -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Team Progress Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-success">{{ team.total_points }}</h4>
+                            <small>Total Points</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-info">{{ team.completed_tiles_count }}</h4>
+                            <small>Tiles Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-warning">{{ all_tiles|length - team.completed_tiles_count }}</h4>
+                            <small>Tiles Remaining</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-primary">{{ "%.1f"|format((team.completed_tiles_count / all_tiles|length * 100) if all_tiles|length > 0 else 0) }}%</h4>
+                            <small>Completion Rate</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                {% if all_tiles|length > 0 %}
+                <div class="mt-3">
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ (team.completed_tiles_count / all_tiles|length * 100) }}%"
+                             aria-valuenow="{{ team.completed_tiles_count }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="{{ all_tiles|length }}">
+                            {{ team.completed_tiles_count }}/{{ all_tiles|length }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

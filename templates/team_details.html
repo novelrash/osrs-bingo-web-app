@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.name }} - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="leaderboard-title">🛡️ {{ team.name }}</h1>
+        <div class="text-center mb-4">
+            <span class="badge bg-success fs-6">{{ team.total_points }} Points</span>
+            <span class="badge bg-info fs-6">{{ team.completed_tiles_count }} Tiles Completed</span>
+            <span class="badge bg-primary fs-6">{{ team.competitors|length }} Players</span>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Leaderboard
+        </a>
+    </div>
+</div>
+
+<!-- Team Members -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>👥 Team Members ({{ team.competitors|length }})</h4>
+            </div>
+            <div class="card-body">
+                {% if team.competitors %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Points</th>
+                                <th>Tiles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for competitor in team.competitors|sort(attribute='total_points', reverse=true) %}
+                            <tr>
+                                <td>
+                                    <span class="rank-badge rank-{{ loop.index }}">{{ loop.index }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('competitor_details', competitor_id=competitor.id) }}" class="competitor-link">
+                                        {{ competitor.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ competitor.total_points }}</span>
+                                </td>
+                                <td>
+                                    <span class="tiles-count">{{ competitor.completed_tiles|length }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <p>No players in this team yet.</p>
+                    {% if request.is_admin %}
+                    <a href="{{ url_for('add_competitor') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Add Player
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Statistics -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>📊 Team Statistics</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h3 class="text-success">{{ team.total_points }}</h3>
+                            <small>Total Points</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h3 class="text-info">{{ team.completed_tiles_count }}</h3>
+                            <small>Total Completions</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h3 class="text-primary">{{ team.competitors|length }}</h3>
+                            <small>Team Members</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h3 class="text-warning">{{ "%.1f"|format(team.total_points / team.competitors|length if team.competitors|length > 0 else 0) }}</h3>
+                            <small>Avg Points/Player</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Breakdown -->
+                {% if team.competitors %}
+                <div class="mt-4">
+                    <h6>Performance Breakdown:</h6>
+                    {% for competitor in team.competitors|sort(attribute='total_points', reverse=true) %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ competitor.name }}</span>
+                        <div>
+                            <span class="points-badge me-2">{{ competitor.total_points }}</span>
+                            <div class="progress" style="width: 100px; height: 8px; display: inline-block;">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ (competitor.total_points / team.total_points * 100) if team.total_points > 0 else 0 }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Team Activity -->
+{% if team.competitors %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>🕐 Recent Team Activity</h5>
+            </div>
+            <div class="card-body">
+                {% set recent_completions = [] %}
+                {% for competitor in team.competitors %}
+                    {% for completion in competitor.completed_tiles %}
+                        {% set _ = recent_completions.append(completion) %}
+                    {% endfor %}
+                {% endfor %}
+                
+                {% if recent_completions %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Tile</th>
+                                <th>Points</th>
+                                <th>Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in recent_completions|sort(attribute='completed_at', reverse=true)[:10] %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('competitor_details', competitor_id=completion.competitor.id) }}" class="competitor-link">
+                                        {{ completion.competitor.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <strong>{{ completion.tile.name }}</strong>
+                                    {% if completion.tile.description %}
+                                    <br><small class="text-muted">{{ completion.tile.description[:50] }}{% if completion.tile.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ completion.tile.points }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ completion.completed_at.strftime('%m/%d %H:%M') }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-clock fa-3x mb-3"></i>
+                    <p>No activity yet. Start completing tiles!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Team Progress Overview -->
+{% if team.competitors %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>🎯 Team Progress Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for competitor in team.competitors|sort(attribute='total_points', reverse=true) %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6>{{ competitor.name }}</h6>
+                                <div class="mb-2">
+                                    <span class="points-badge">{{ competitor.total_points }} pts</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: {{ (competitor.total_points / team.total_points * 100) if team.total_points > 0 else 0 }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ competitor.completed_tiles|length }} tiles completed</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

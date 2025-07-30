@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Teams - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>🛡️ Manage Teams</h3>
+                    <div>
+                        <a href="{{ url_for('add_team') }}" class="btn btn-success me-2">
+                            <i class="fas fa-plus"></i> Add New Team
+                        </a>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if teams %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Team Name</th>
+                                    <th>Players</th>
+                                    <th>Total Points</th>
+                                    <th>Completed Tiles</th>
+                                    <th width="100">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team in teams %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ team.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ team.competitors|length }}</span>
+                                        {% if team.competitors %}
+                                        <div class="small text-muted mt-1">
+                                            {% for competitor in team.competitors[:3] %}
+                                                {{ competitor.name }}{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                            {% if team.competitors|length > 3 %}
+                                                ... and {{ team.competitors|length - 3 }} more
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ team.total_points }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ team.completed_tiles_count }}</span>
+                                    </td>
+                                    <td>
+                                        {% if team.competitors|length > 0 %}
+                                        <button class="btn btn-sm btn-outline-danger" disabled title="Remove all players first">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% else %}
+                                        <form method="POST" action="{{ url_for('remove_team', team_id=team.id) }}" style="display: inline;" 
+                                              onsubmit="return confirm('Are you sure you want to remove team &quot;{{ team.name }}&quot;? This will also remove all {{ team.completed_tiles_count }} completion(s) for this team.')">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="alert alert-info">
+                            <strong>📊 Summary:</strong> {{ teams|length }} total teams, {{ teams|map(attribute='competitors')|map('length')|sum }} total players
+                        </div>
+                        <div class="alert alert-warning">
+                            <strong>⚠️ Note:</strong> Teams with players cannot be removed. Remove all players from a team first before deleting the team.
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>No teams found</h5>
+                        <p class="text-muted">Create some teams to get started!</p>
+                        <a href="{{ url_for('add_team') }}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add First Team
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

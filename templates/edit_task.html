@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Quest{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>📜 Edit Quest: {{ task.name }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="name" class="form-label">Quest Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ task.name }}" required 
+                               placeholder="Enter quest name">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="description" class="form-label">Quest Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"
+                                  placeholder="Describe the quest objectives and requirements...">{{ task.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="points" class="form-label">Experience Points Reward</label>
+                        <input type="number" class="form-control" id="points" name="points" 
+                               value="{{ task.points }}" required min="1"
+                               placeholder="Enter XP reward">
+                        <div class="form-text" style="color: var(--rs-light-brown);">
+                            💡 Changing XP will affect all existing completions and rankings
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('task_overview') }}" class="btn btn-secondary me-md-2">
+                            ↩️ Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            💾 Update Quest
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Statistics -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Quest Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>XP Reward:</strong><br>
+                        <span class="gold">{{ task.points }} points</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Completions:</strong><br>
+                        {{ task.completions|length }} times
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Total XP Awarded:</strong><br>
+                        <span class="gold">{{ task.points * task.completions|length }} XP</span>
+                    </div>
+                </div>
+                
+                {% if task.completions %}
+                <hr>
+                <h6>Recent Completions:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Adventurer</th>
+                                <th>Team</th>
+                                <th>Completed</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in task.completions[-10:] %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('competitor_details', competitor_id=completion.competitor.id) }}" 
+                                       style="color: var(--rs-dark-brown);">
+                                        {{ completion.competitor.name }}
+                                    </a>
+                                </td>
+                                <td>{{ completion.competitor.team.name }}</td>
+                                <td>{{ completion.completed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('delete_completion', completion_id=completion.id) }}" 
+                                          style="display: inline;"
+                                          onsubmit="return confirm('Remove this completion?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">❌</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quest Difficulty Guide -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>🎯 XP Reward Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 style="color: var(--rs-green);">Easy Quests (1-50 XP)</h6>
+                        <ul style="color: var(--rs-dark-brown); font-size: 0.9em;">
+                            <li>Simple skill tasks</li>
+                            <li>Basic item collection</li>
+                            <li>Short activities</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 style="color: var(--rs-dark-red);">Hard Quests (100+ XP)</h6>
+                        <ul style="color: var(--rs-dark-brown); font-size: 0.9em;">
+                            <li>Complex challenges</li>
+                            <li>Boss defeats</li>
+                            <li>Long-term goals</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Danger Zone -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card" style="border-color: var(--rs-dark-red);">
+            <div class="card-header" style="background: linear-gradient(180deg, var(--rs-dark-red) 0%, #660000 100%); color: var(--rs-parchment);">
+                <h5>⚠️ Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Delete Quest:</strong> This will remove the quest and ALL completions.</p>
+                <p class="text-muted">
+                    <small>⚠️ This action cannot be undone and will affect all rankings!</small>
+                </p>
+                <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" 
+                      onsubmit="return confirm('Are you sure you want to delete {{ task.name }}? This will remove all completions and cannot be undone!')">
+                    <button type="submit" class="btn btn-danger">🗑️ Delete Quest</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

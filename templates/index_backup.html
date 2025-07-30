@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}RuneScape Competition Leaderboard{% endblock %}
+
+{% block content %}
+<h1 class="leaderboard-title">🏆 Competition Leaderboard 🏆</h1>
+
+<div class="row">
+    <!-- Team Rankings -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>🛡️ Team Rankings</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="teamChart" class="mb-4"></canvas>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Team</th>
+                                <th>Points</th>
+                                <th>Members</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                            <tr onclick="window.location='{{ url_for('team_details', team_id=team.id) }}'" style="cursor: pointer;">
+                                <td>
+                                    {% if loop.index == 1 %}
+                                        <span class="rank-badge rank-1">1</span>
+                                    {% elif loop.index == 2 %}
+                                        <span class="rank-badge rank-2">2</span>
+                                    {% elif loop.index == 3 %}
+                                        <span class="rank-badge rank-3">3</span>
+                                    {% else %}
+                                        <span class="rank-badge" style="background: #6b4d37; color: #f4e4bc; border-color: #2c1810;">{{ loop.index }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ team.name }}</strong>
+                                    {% if loop.index <= 3 %}
+                                        {% if loop.index == 1 %}🥇
+                                        {% elif loop.index == 2 %}🥈
+                                        {% elif loop.index == 3 %}🥉
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="{% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">
+                                        {{ team.total_points }} pts
+                                    </span>
+                                </td>
+                                <td>{{ team.members|length }} members</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Individual Rankings -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>⚔️ Individual Rankings</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Adventurer</th>
+                                <th>Team</th>
+                                <th>Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for competitor in competitors %}
+                            <tr onclick="window.location='{{ url_for('competitor_details', competitor_id=competitor.id) }}'" style="cursor: pointer;">
+                                <td>
+                                    {% if loop.index == 1 %}
+                                        <span class="rank-badge rank-1">1</span>
+                                    {% elif loop.index == 2 %}
+                                        <span class="rank-badge rank-2">2</span>
+                                    {% elif loop.index == 3 %}
+                                        <span class="rank-badge rank-3">3</span>
+                                    {% else %}
+                                        <span class="rank-badge" style="background: #6b4d37; color: #f4e4bc; border-color: #2c1810;">{{ loop.index }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ competitor.name }}</strong>
+                                    {% if loop.index <= 3 %}
+                                        {% if loop.index == 1 %}🥇
+                                        {% elif loop.index == 2 %}🥈
+                                        {% elif loop.index == 3 %}🥉
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>{{ competitor.team.name }}</td>
+                                <td>
+                                    <span class="{% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">
+                                        {{ competitor.total_points }} pts
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Task Completion -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>📜 Quick Task Completion</h3>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('complete_task') }}" method="POST" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Select Adventurer</label>
+                        <select name="competitor_id" class="form-select" required>
+                            <option value="">Choose an adventurer...</option>
+                            {% for competitor in competitors %}
+                            <option value="{{ competitor.id }}">{{ competitor.name }} ({{ competitor.team.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Select Quest/Task</label>
+                        <select name="task_id" class="form-select" required>
+                            <option value="">Choose a quest...</option>
+                            {% for task in tasks %}
+                            <option value="{{ task.id }}">{{ task.name }} ({{ task.points }} pts)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary d-block">⚡ Record Completion</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Competition Stats -->
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">{{ teams|length }}</h4>
+                <p class="mb-0">Active Teams</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">{{ competitors|length }}</h4>
+                <p class="mb-0">Adventurers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 style="color: var(--rs-gold);">{{ tasks|length }}</h4>
+                <p class="mb-0">Available Quests</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if last_update %}
+<div class="text-center mt-3">
+    <small style="color: var(--rs-parchment); opacity: 0.8;">
+        Last updated: {{ last_update.strftime('%Y-%m-%d %H:%M:%S') }} UTC
+    </small>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Team points chart with RuneScape-inspired colors
+const ctx = document.getElementById('teamChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [{% for team in teams %}'{{ team.name }}',{% endfor %}],
+        datasets: [{
+            label: 'Team Points',
+            data: [{% for team in teams %}{{ team.total_points }},{% endfor %}],
+            backgroundColor: [
+                'rgba(212, 175, 55, 0.7)',   // Gold
+                'rgba(192, 192, 192, 0.7)',  // Silver
+                'rgba(205, 127, 50, 0.7)',   // Bronze
+                'rgba(107, 77, 55, 0.7)',    // Brown
+                'rgba(90, 90, 90, 0.7)',     // Stone
+                'rgba(139, 0, 0, 0.7)',      // Dark Red
+                'rgba(34, 139, 34, 0.7)',    // Green
+            ],
+            borderColor: [
+                'rgba(212, 175, 55, 1)',
+                'rgba(192, 192, 192, 1)',
+                'rgba(205, 127, 50, 1)',
+                'rgba(107, 77, 55, 1)',
+                'rgba(90, 90, 90, 1)',
+                'rgba(139, 0, 0, 1)',
+                'rgba(34, 139, 34, 1)',
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#2c1810',
+                    font: {
+                        family: 'Cinzel',
+                        weight: '600'
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#2c1810',
+                    font: {
+                        family: 'Cinzel',
+                        weight: '500'
+                    }
+                },
+                grid: {
+                    color: 'rgba(44, 24, 16, 0.2)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#2c1810',
+                    font: {
+                        family: 'Cinzel',
+                        weight: '500'
+                    }
+                },
+                grid: {
+                    color: 'rgba(44, 24, 16, 0.2)'
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

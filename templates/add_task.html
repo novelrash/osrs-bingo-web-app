@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Quest{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>📜 Create New Quest</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="name" class="form-label">Quest Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required 
+                               placeholder="Enter the quest name (e.g., 'Defeat 10 Goblins')">
+                    </div>
+                    <div class="mb-4">
+                        <label for="description" class="form-label">Quest Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"
+                                  placeholder="Describe the quest objectives and requirements..."></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="points" class="form-label">Experience Points Reward</label>
+                        <input type="number" class="form-control" id="points" name="points" required min="1"
+                               placeholder="Enter XP reward (e.g., 100)">
+                        <div class="form-text" style="color: var(--rs-light-brown);">
+                            💡 Tip: Higher difficulty quests should award more XP
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary me-md-2">🏠 Back to Leaderboard</a>
+                        <button type="submit" class="btn btn-primary">⚡ Create Quest</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quest Creation Tips -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>🎯 Quest Creation Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 style="color: var(--rs-gold);">Easy Quests (1-50 XP)</h6>
+                        <ul style="color: var(--rs-dark-brown);">
+                            <li>Simple skill tasks</li>
+                            <li>Basic item collection</li>
+                            <li>Short activities</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 style="color: var(--rs-gold);">Hard Quests (100+ XP)</h6>
+                        <ul style="color: var(--rs-dark-brown);">
+                            <li>Complex challenges</li>
+                            <li>Boss defeats</li>
+                            <li>Long-term goals</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

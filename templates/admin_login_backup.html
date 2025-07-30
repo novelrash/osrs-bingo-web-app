@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3>🔐 Admin Access</h3>
+                <p class="mb-0">Administrator authentication required</p>
+            </div>
+            <div class="card-body">
+                <!-- Username/Password Login Form -->
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               required autocomplete="username"
+                               placeholder="Enter your admin username">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               required autocomplete="current-password"
+                               placeholder="Enter your password">
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            🔑 Login
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            ↩️ Back to Leaderboard
+                        </a>
+                    </div>
+                </form>
+                
+                <!-- Manual Token Input (for development/testing) -->
+                <hr class="my-4">
+                <div class="text-center">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#manualToken">
+                        🔧 Developer: Manual Token Entry
+                    </button>
+                </div>
+                
+                <div class="collapse mt-3" id="manualToken">
+                    <form method="POST" action="{{ url_for('admin_callback') }}">
+                        <div class="mb-3">
+                            <label for="access_token" class="form-label">Access Token</label>
+                            <textarea class="form-control" id="access_token" name="access_token" rows="3" 
+                                      placeholder="Paste your JWT access token here..."></textarea>
+                            <div class="form-text">
+                                <small>⚠️ For development use only. Use the login form above for normal access.</small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            🔓 Authenticate with Token
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Information Card -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>ℹ️ Admin Features</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Admin access provides:</strong></p>
+                <ul>
+                    <li>📊 Advanced analytics dashboard</li>
+                    <li>📤 Data export (CSV/JSON)</li>
+                    <li>📥 Bulk data import</li>
+                    <li>🔧 System configuration</li>
+                    <li>🗄️ Database management</li>
+                </ul>
+                <p class="text-muted">
+                    <small>Contact your system administrator if you need admin access.</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Setup Instructions (for development) -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>🛠️ Setup Instructions</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>To set up admin authentication:</strong></p>
+                <ol class="small">
+                    <li>Run <code>./setup-cognito.sh</code> to create User Pool</li>
+                    <li>Set environment variables from the output</li>
+                    <li>Run <code>./manage-admin-users.sh create &lt;username&gt; &lt;password&gt;</code></li>
+                    <li>Login with your admin credentials</li>
+                </ol>
+                
+                <div class="mt-3">
+                    <strong>Quick Test:</strong>
+                    <pre class="small">python3 test-auth.py &lt;username&gt; &lt;password&gt;</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-focus username field
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('username').focus();
+});
+
+// Handle form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    
+    if (!username || !password) {
+        e.preventDefault();
+        alert('Please enter both username and password.');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '⏳ Authenticating...';
+    submitBtn.disabled = true;
+    
+    // Re-enable button after a delay if form doesn't submit
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 5000);
+});
+
+// Handle token from URL fragment (if redirected from Cognito Hosted UI)
+window.addEventListener('load', function() {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    
+    if (accessToken) {
+        // Send token to backend
+        fetch('/admin/callback?access_token=' + encodeURIComponent(accessToken))
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/admin';
+                } else {
+                    alert('Authentication failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Authentication error:', error);
+                alert('Authentication failed. Please try again.');
+            });
+    }
+});
+</script>
+{% endblock %}

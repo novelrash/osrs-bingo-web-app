@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}View Completions - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="leaderboard-title">📋 Tile Completions</h1>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>🎯 All Tile Completions</h4>
+                <small class="text-muted">Manage and review completed tiles</small>
+            </div>
+            <div class="card-body">
+                {% if completions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Team</th>
+                                <th>Tile</th>
+                                <th>Points</th>
+                                <th>Completed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in completions %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('competitor_details', competitor_id=completion.competitor.id) }}" class="competitor-link">
+                                        {{ completion.competitor.name }}
+                                    </a>
+                                </td>
+                                <td>{{ completion.competitor.team.name }}</td>
+                                <td>
+                                    <strong>{{ completion.tile.name }}</strong>
+                                    {% if completion.tile.description %}
+                                    <br><small class="text-muted">{{ completion.tile.description }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ completion.tile.points }}</span>
+                                </td>
+                                <td>{{ completion.completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('remove_completion', completion_id=completion.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('Are you sure you want to remove this completion?\\n\\nPlayer: {{ completion.competitor.name }}\\nTile: {{ completion.tile.name }}\\nPoints: {{ completion.tile.points }}')">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Total completions: {{ completions|length }}
+                    </small>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <h5>No Completions Yet</h5>
+                    <p>No tiles have been completed yet. Start marking completions to see them here!</p>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Go to Dashboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

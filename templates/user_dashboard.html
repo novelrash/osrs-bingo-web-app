@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ user.display_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- User Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            {% if user.avatar_url %}
+                                <img src="{{ user.avatar_url }}" alt="Avatar" class="rounded-circle" width="64" height="64">
+                            {% else %}
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                    <i class="fas fa-user fa-2x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col">
+                            <h2 class="mb-1">Welcome, {{ user.display_name }}!</h2>
+                            <p class="mb-0">
+                                <i class="fab fa-discord"></i> {{ user.discord_username }}
+                                {% if user.team %}
+                                    • <i class="fas fa-users"></i> {{ user.team.name }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-auto">
+                            <a href="{{ url_for('logout') }}" class="btn btn-outline-light">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user.team %}
+        <!-- Team Overview -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">{{ user.team.total_points }}</h3>
+                        <p class="text-muted mb-0">Team Points</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">{{ user.team.completed_tiles_count }}</h3>
+                        <p class="text-muted mb-0">Tiles Completed</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-info">{{ user.submission_count }}</h3>
+                        <p class="text-muted mb-0">Your Contributions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tile Submission -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-plus-circle"></i> Submit Tile Completion</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('submit_tile') }}">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <select name="tile_id" class="form-select" required>
+                                        <option value="">Select a tile to submit...</option>
+                                        {% for tile in available_tiles %}
+                                            {% if tile.id not in completed_tile_ids %}
+                                                <option value="{{ tile.id }}">
+                                                    {{ tile.name }} ({{ tile.points }} points)
+                                                    {% if tile.description %} - {{ tile.description }}{% endif %}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-check"></i> Submit for Approval
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <small class="text-muted mt-2 d-block">
+                            <i class="fas fa-info-circle"></i> Submissions require admin approval before being added to your team's score.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Progress -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-trophy"></i> {{ user.team.name }} - Completed Tiles</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if team_tiles %}
+                            <div class="list-group list-group-flush">
+                                {% for completion in team_tiles %}
+                                    {% if completion.admin_approved %}
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ completion.tile.name }}</strong>
+                                                {% if completion.tile.description %}
+                                                    <br><small class="text-muted">{{ completion.tile.description }}</small>
+                                                {% endif %}
+                                                {% if completion.submitted_by_discord_user %}
+                                                    <br><small class="text-info">
+                                                        <i class="fas fa-user"></i> Submitted by {{ completion.submitted_by_discord_user.display_name }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                            <span class="badge bg-success rounded-pill">{{ completion.tile.points }} pts</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center py-4">
+                                <i class="fas fa-clipboard-list fa-3x mb-3 d-block"></i>
+                                No tiles completed yet. Be the first to submit one!
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clock"></i> Your Submissions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if user_submissions %}
+                            <div class="list-group list-group-flush">
+                                {% for submission in user_submissions %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ submission.tile.name }}</strong>
+                                            <br><small class="text-muted">{{ submission.completed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </div>
+                                        {% if submission.admin_approved %}
+                                            <span class="badge bg-success rounded-pill">
+                                                <i class="fas fa-check"></i> Approved
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning rounded-pill">
+                                                <i class="fas fa-clock"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center py-4">
+                                <i class="fas fa-upload fa-3x mb-3 d-block"></i>
+                                No submissions yet. Submit your first tile above!
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">Quick Actions</h6>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-chart-bar"></i> View Leaderboard
+                        </a>
+                        <a href="{{ url_for('link_account') }}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-link"></i> Change Team Link
+                        </a>
+                        {% if user.is_admin %}
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-danger">
+                                <i class="fas fa-cog"></i> Admin Panel
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- Not Linked -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card text-center">
+                    <div class="card-body py-5">
+                        <i class="fas fa-link fa-4x text-muted mb-4"></i>
+                        <h3>Link Your Account</h3>
+                        <p class="text-muted mb-4">
+                            Connect your Discord account to a competitor to start tracking your team's progress and submit tile completions!
+                        </p>
+                        <a href="{{ url_for('link_account') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-link"></i> Link to Competitor
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}

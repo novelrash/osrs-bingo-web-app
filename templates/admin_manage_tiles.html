@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Tiles - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>🎯 Manage Tiles</h3>
+                    <div>
+                        <a href="{{ url_for('add_tile') }}" class="btn btn-success me-2">
+                            <i class="fas fa-plus"></i> Add New Tile
+                        </a>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if tiles %}
+                    <form method="POST" action="{{ url_for('bulk_remove_tiles') }}" onsubmit="return confirm('Are you sure you want to remove the selected tiles? This will also remove all completions for these tiles.')">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <button type="button" id="selectAll" class="btn btn-sm btn-outline-primary">Select All</button>
+                                <button type="button" id="selectNone" class="btn btn-sm btn-outline-secondary">Select None</button>
+                            </div>
+                            <button type="submit" class="btn btn-danger" id="bulkRemove" style="display: none;">
+                                <i class="fas fa-trash"></i> Remove Selected
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th width="50">
+                                            <input type="checkbox" id="masterCheck">
+                                        </th>
+                                        <th>Tile Name</th>
+                                        <th>Points</th>
+                                        <th>Completions</th>
+                                        <th>Description</th>
+                                        <th width="120">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tile in tiles %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="tile_ids" value="{{ tile.id }}" class="tile-checkbox">
+                                        </td>
+                                        <td>
+                                            <strong>{{ tile.name }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ tile.points }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ tile.completion_count }}</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ tile.description[:50] + '...' if tile.description and tile.description|length > 50 else tile.description or 'No description' }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <form method="POST" action="{{ url_for('remove_tile', tile_id=tile.id) }}" style="display: inline;" 
+                                                  onsubmit="return confirm('Are you sure you want to remove &quot;{{ tile.name }}&quot;? This will also remove all {{ tile.completion_count }} completion(s) for this tile.')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-primary ms-1" 
+                                                    data-bs-toggle="modal" data-bs-target="#editModal{{ tile.id }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                    
+                    <!-- Edit Modals -->
+                    {% for tile in tiles %}
+                    <div class="modal fade" id="editModal{{ tile.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ tile.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editModalLabel{{ tile.id }}">
+                                        <i class="fas fa-edit"></i> Edit Tile: {{ tile.name }}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('edit_tile', tile_id=tile.id) }}">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="tileName{{ tile.id }}" class="form-label">Tile Name</label>
+                                            <input type="text" class="form-control" id="tileName{{ tile.id }}" name="tile_name" 
+                                                   value="{{ tile.name }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="tilePoints{{ tile.id }}" class="form-label">Points</label>
+                                            <input type="number" class="form-control" id="tilePoints{{ tile.id }}" name="tile_points" 
+                                                   value="{{ tile.points }}" min="1" max="100" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="tileDescription{{ tile.id }}" class="form-label">Description</label>
+                                            <textarea class="form-control" id="tileDescription{{ tile.id }}" name="tile_description" 
+                                                      rows="3" placeholder="Optional description...">{{ tile.description or '' }}</textarea>
+                                            <div class="form-text">
+                                                Provide clear instructions or requirements for this tile
+                                            </div>
+                                        </div>
+                                        
+                                        {% if tile.completion_count > 0 %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <strong>Warning:</strong> This tile has {{ tile.completion_count }} completion(s). 
+                                            Changing the name or points may affect existing completions.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Save Changes
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="mt-3">
+                        <div class="alert alert-info">
+                            <strong>📊 Summary:</strong> {{ tiles|length }} total tiles
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-puzzle-piece fa-3x text-muted mb-3"></i>
+                        <h5>No tiles found</h5>
+                        <p class="text-muted">Add some tiles to get started!</p>
+                        <a href="{{ url_for('add_tile') }}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add First Tile
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Checkbox management
+document.getElementById('masterCheck').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.tile-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    updateBulkRemoveButton();
+});
+
+document.getElementById('selectAll').addEventListener('click', function() {
+    const checkboxes = document.querySelectorAll('.tile-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+    document.getElementById('masterCheck').checked = true;
+    updateBulkRemoveButton();
+});
+
+document.getElementById('selectNone').addEventListener('click', function() {
+    const checkboxes = document.querySelectorAll('.tile-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    document.getElementById('masterCheck').checked = false;
+    updateBulkRemoveButton();
+});
+
+document.querySelectorAll('.tile-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateBulkRemoveButton);
+});
+
+function updateBulkRemoveButton() {
+    const checkedBoxes = document.querySelectorAll('.tile-checkbox:checked');
+    const bulkRemoveBtn = document.getElementById('bulkRemove');
+    
+    if (checkedBoxes.length > 0) {
+        bulkRemoveBtn.style.display = 'inline-block';
+        bulkRemoveBtn.textContent = `Remove Selected (${checkedBoxes.length})`;
+    } else {
+        bulkRemoveBtn.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

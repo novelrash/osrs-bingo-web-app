@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Tiles Overview - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="leaderboard-title">🎯 Bingo Tiles</h1>
+    </div>
+</div>
+
+<!-- Search and Filter Controls -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>🔍 Search & Filter</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="search" class="form-label">Search Tiles</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="Search by name or description...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sort" class="form-label">Sort By</label>
+                        <select class="form-control" id="sort" name="sort">
+                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+                            <option value="points" {% if sort_by == 'points' %}selected{% endif %}>Points</option>
+                            <option value="completions" {% if sort_by == 'completions' %}selected{% endif %}>Completions</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="order" class="form-label">Order</label>
+                        <select class="form-control" id="order" name="order">
+                            <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending</option>
+                            <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <a href="{{ url_for('tile_overview') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                        {% if request.is_admin %}
+                        <a href="{{ url_for('add_tile') }}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add New Tile
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tiles List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>📋 Tiles List</h4>
+                <span class="badge bg-info">{{ tiles|length }} tiles found</span>
+            </div>
+            <div class="card-body">
+                {% if tiles %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a href="{{ url_for('tile_overview', search=search, sort='name', order='asc' if sort_by != 'name' or order == 'desc' else 'desc') }}" 
+                                       class="text-decoration-none">
+                                        Tile Name
+                                        {% if sort_by == 'name' %}
+                                            <i class="fas fa-sort-{{ 'up' if order == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>Description</th>
+                                <th>
+                                    <a href="{{ url_for('tile_overview', search=search, sort='points', order='asc' if sort_by != 'points' or order == 'desc' else 'desc') }}" 
+                                       class="text-decoration-none">
+                                        Points
+                                        {% if sort_by == 'points' %}
+                                            <i class="fas fa-sort-{{ 'up' if order == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('tile_overview', search=search, sort='completions', order='asc' if sort_by != 'completions' or order == 'desc' else 'desc') }}" 
+                                       class="text-decoration-none">
+                                        Completions
+                                        {% if sort_by == 'completions' %}
+                                            <i class="fas fa-sort-{{ 'up' if order == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>Difficulty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tile in tiles %}
+                            <tr>
+                                <td>
+                                    <strong>{{ tile.name }}</strong>
+                                </td>
+                                <td>
+                                    {% if tile.description %}
+                                        <small class="text-muted">{{ tile.description }}</small>
+                                    {% else %}
+                                        <em class="text-muted">No description</em>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ tile.points }}</span>
+                                </td>
+                                <td>
+                                    <span class="tiles-count">{{ tile.completion_count }}</span>
+                                    {% if tile.completion_count > 0 %}
+                                        <small class="text-muted">players</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if tile.points <= 3 %}
+                                        <span class="badge bg-success">Easy</span>
+                                    {% elif tile.points <= 7 %}
+                                        <span class="badge bg-warning">Medium</span>
+                                    {% elif tile.points <= 15 %}
+                                        <span class="badge bg-danger">Hard</span>
+                                    {% else %}
+                                        <span class="badge bg-dark">Epic</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Summary Statistics -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="text-primary">{{ tiles|length }}</h5>
+                                <small>Total Tiles</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="text-success">{{ tiles|sum(attribute='points') }}</h5>
+                                <small>Total Points</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="text-info">{{ tiles|sum(attribute='completion_count') }}</h5>
+                                <small>Total Completions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="text-warning">{{ "%.1f"|format(tiles|sum(attribute='points') / tiles|length if tiles|length > 0 else 0) }}</h5>
+                                <small>Avg Points</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    {% if search %}
+                        <h5>No tiles found for "{{ search }}"</h5>
+                        <p>Try adjusting your search terms or <a href="{{ url_for('tile_overview') }}">view all tiles</a>.</p>
+                    {% else %}
+                        <h5>No Tiles Available</h5>
+                        <p>No bingo tiles have been created yet.</p>
+                        {% if request.is_admin %}
+                        <a href="{{ url_for('add_tile') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create First Tile
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats by Difficulty -->
+{% if tiles %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Difficulty Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-success">{{ tiles|selectattr('points', '<=', 3)|list|length }}</h4>
+                            <span class="badge bg-success">Easy (1-3 pts)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-warning">{{ tiles|selectattr('points', '>', 3)|selectattr('points', '<=', 7)|list|length }}</h4>
+                            <span class="badge bg-warning">Medium (4-7 pts)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-danger">{{ tiles|selectattr('points', '>', 7)|selectattr('points', '<=', 15)|list|length }}</h4>
+                            <span class="badge bg-danger">Hard (8-15 pts)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-dark">{{ tiles|selectattr('points', '>', 15)|list|length }}</h4>
+                            <span class="badge bg-dark">Epic (16+ pts)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Navigation -->
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+            <i class="fas fa-trophy"></i> Back to Leaderboard
+        </a>
+        {% if request.is_admin %}
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-cog"></i> Admin Dashboard
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

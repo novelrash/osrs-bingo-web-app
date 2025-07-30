@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Pea Kingdom Bingo Leaderboard{% endblock %}
+
+{% block content %}
+<h1 class="leaderboard-title">🏆 Bingo Leaderboard 🏆</h1>
+
+<div class="row">
+    <!-- Team Rankings -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>🛡️ Team Rankings</h3>
+                <small class="text-muted">Teams earn points for completed tiles</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Team</th>
+                                <th>Points</th>
+                                <th>Tiles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                            <tr>
+                                <td>
+                                    <span class="rank-badge rank-{{ loop.index }}">{{ loop.index }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('team_details', team_id=team.id) }}" class="team-link">
+                                        {{ team.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ team.total_points }}</span>
+                                </td>
+                                <td>
+                                    <span class="tiles-count">{{ team.completed_tiles_count }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    No teams yet. Admin can add teams to get started!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player List -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>⚔️ Individual Rankings</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Team</th>
+                                <th>Individual Points</th>
+                                <th>Team Points</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for competitor in competitors %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('team_progress', player_name=competitor.name) }}" class="competitor-link">
+                                        {{ competitor.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('team_progress', player_name=competitor.name) }}" class="team-link">
+                                        {{ competitor.team.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ competitor.total_points }}</span>
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ competitor.team.total_points }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('team_progress', player_name=competitor.name) }}" class="btn btn-sm btn-outline-primary">
+                                        View Progress
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    No players yet. Admin can add players to get started!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-header">
+                <h4>🎯 Player Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h5><i class="fas fa-plus-circle text-success"></i> Submit Completion</h5>
+                                <p class="small">Completed a tile? Submit it for your team!</p>
+                                <a href="{{ url_for('submit_completion') }}" class="btn btn-success">
+                                    📝 Submit Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h5><i class="fas fa-list text-info"></i> View All Tiles</h5>
+                                <p class="small">See all available bingo tiles and their points</p>
+                                <a href="{{ url_for('tile_overview') }}" class="btn btn-info">
+                                    🎯 Browse Tiles
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h5><i class="fas fa-chart-line text-warning"></i> Team Progress</h5>
+                                <p class="small">Check your team's completed tiles and progress</p>
+                                {% if competitors %}
+                                <div class="dropdown">
+                                    <button class="btn btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        📊 Select Player
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% for competitor in competitors %}
+                                        <li><a class="dropdown-item" href="{{ url_for('team_progress', player_name=competitor.name) }}">{{ competitor.name }} ({{ competitor.team.name }})</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% else %}
+                                <button class="btn btn-warning" disabled>No Players Yet</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Controls -->
+{% if request.is_admin %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card admin-controls">
+            <div class="card-header">
+                <h4>🔧 Admin Controls</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('add_team') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Add Team
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('add_competitor') }}" class="btn btn-success w-100">
+                            <i class="fas fa-user-plus"></i> Add Player
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('add_tile') }}" class="btn btn-info w-100">
+                            <i class="fas fa-tasks"></i> Add Tile
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Team Tile Completion -->
+                {% if competitors and tiles %}
+                <div class="mt-4">
+                    <h5>⚡ Quick Team Completion (Admin)</h5>
+                    <form method="POST" action="{{ url_for('admin_complete_tile') }}" class="row">
+                        <div class="col-md-4">
+                            <select name="team_id" class="form-control" required>
+                                <option value="">Select Team...</option>
+                                {% for team in teams %}
+                                <option value="{{ team.id }}">{{ team.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="tile_id" class="form-control" required>
+                                <option value="">Select Tile...</option>
+                                {% for tile in tiles %}
+                                <option value="{{ tile.id }}">{{ tile.name }} ({{ tile.points }} pts)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-check"></i> Complete for Team
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- System Information -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5>❓ How It Works</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-tasks"></i> Tile Completion</h6>
+                        <ul class="small">
+                            <li><strong>Self-service:</strong> Submit your own completions</li>
+                            <li><strong>Admin approval:</strong> Submissions need approval</li>
+                            <li><strong>No duplicates:</strong> Can't submit if team already completed</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-info-circle"></i> General Info</h6>
+                        <ul class="small">
+                            <li><strong>One per team:</strong> Each tile can only be completed once per team</li>
+                            <li><strong>Individual ranks tracked:</strong> Individual ranks are tracked, but awards will be just for teams</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Last Update Info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <small class="text-muted">
+                    <i class="fas fa-clock"></i> Last updated: {{ last_update.strftime('%Y-%m-%d %H:%M:%S UTC') if last_update else 'Never' }}
+                    {% if tiles|length > 0 %}
+                    | <i class="fas fa-tasks"></i> {{ tiles|length }} tiles available
+                    {% endif %}
+                    {% if competitors|length > 0 %}
+                    | <i class="fas fa-users"></i> {{ competitors|length }} players competing
+                    {% endif %}
+                    {% if teams|length > 0 %}
+                    | <i class="fas fa-shield-alt"></i> {{ teams|length }} teams active
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Completion - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="leaderboard-title">🎯 Submit Tile Completion</h1>
+        <div class="text-center mb-4">
+            <p class="lead">Submit a completed tile for your team!</p>
+        </div>
+    </div>
+</div>
+
+<!-- Submission Form -->
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>📝 Submit Your Completion</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="player_name" class="form-label">Your Player Name *</label>
+                        <select class="form-control" id="player_name" name="player_name" required>
+                            <option value="">Select your player name...</option>
+                            {% for competitor in competitors %}
+                            <option value="{{ competitor.name }}">{{ competitor.name }} ({{ competitor.team.name }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select your player name to see your team</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tile_id" class="form-label">Completed Tile *</label>
+                        <select class="form-control" id="tile_id" name="tile_id" required>
+                            <option value="">Select completed tile...</option>
+                            {% for tile in tiles %}
+                            <option value="{{ tile.id }}">{{ tile.name }} ({{ tile.points }} points)</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Choose the tile you completed</div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Important Notes:</h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Team-based:</strong> Only one completion per tile per team</li>
+                            <li><strong>Admin approval:</strong> Submissions require admin approval</li>
+                            <li><strong>No duplicates:</strong> If your team already completed a tile, you can't submit it again</li>
+                            <li><strong>Check progress:</strong> View your team's progress after submitting</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Leaderboard
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Submit Completion
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Team Progress Check -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>🔍 Check Your Team's Progress</h5>
+            </div>
+            <div class="card-body">
+                <p>Want to see what your team has already completed?</p>
+                <div class="row">
+                    {% for competitor in competitors %}
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('team_progress', player_name=competitor.name) }}" class="btn btn-outline-primary btn-sm w-100">
+                            {{ competitor.name }}<br>
+                            <small>({{ competitor.team.name }})</small>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+// Auto-filter tiles based on selected player's team progress
+document.getElementById('player_name').addEventListener('change', function() {
+    const playerName = this.value;
+    if (playerName) {
+        // Could add AJAX call here to filter out already completed tiles for the team
+        console.log('Selected player:', playerName);
+    }
+});
+</script>
+{% endblock %}

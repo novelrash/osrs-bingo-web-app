@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Individual Rankings - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="leaderboard-title">⚔️ Individual Rankings</h1>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    🏠 Back to Main Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>🏆 All Individual Competitors</h3>
+                    <small class="text-muted">Complete rankings of all players by total points earned</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover individual-rankings-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>Team</th>
+                                    <th>Points</th>
+                                    <th>Tiles Completed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for competitor in competitors %}
+                                <tr>
+                                    <td>
+                                        <span class="rank-badge rank-{{ loop.index }}">{{ loop.index }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ competitor.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('team_progress', player_name=competitor.name) }}" class="team-link">
+                                            {{ competitor.team.name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="points-badge">{{ competitor.total_points }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="tiles-count">{{ competitor.completed_tiles|length }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('team_progress', player_name=competitor.name) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            📊 View Progress
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fas fa-users fa-2x mb-3"></i><br>
+                                        No players have been added yet.<br>
+                                        {% if request.is_admin %}
+                                        <a href="{{ url_for('add_competitor') }}" class="btn btn-primary mt-2">
+                                            👤 Add First Player
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if competitors %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5>📈 Competition Statistics</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h4 class="text-primary">{{ competitors|length }}</h4>
+                                <small class="text-muted">Total Players</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h4 class="text-success">{{ competitors[0].total_points if competitors else 0 }}</h4>
+                                <small class="text-muted">Highest Score</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h4 class="text-warning">{{ (competitors|sum(attribute='total_points') / competitors|length)|round(1) if competitors else 0 }}</h4>
+                                <small class="text-muted">Average Score</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h4 class="text-info">{{ competitors|map(attribute='completed_tiles')|map('length')|sum if competitors else 0 }}</h4>
+                                <small class="text-muted">Total Completions</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary me-2">
+                🏠 Back to Main Leaderboard
+            </a>
+            <a href="{{ url_for('tile_overview') }}" class="btn btn-info me-2">
+                🎯 View All Tiles
+            </a>
+            <a href="{{ url_for('submit_completion') }}" class="btn btn-success">
+                📝 Submit Completion
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.individual-rankings-table {
+    white-space: nowrap;
+}
+
+.individual-rankings-table th,
+.individual-rankings-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+.individual-rankings-table th:first-child,
+.individual-rankings-table td:first-child {
+    width: 80px;
+    text-align: center;
+}
+
+.individual-rankings-table th:nth-child(2),
+.individual-rankings-table td:nth-child(2) {
+    min-width: 150px;
+}
+
+.individual-rankings-table th:nth-child(3),
+.individual-rankings-table td:nth-child(3) {
+    min-width: 120px;
+}
+
+.individual-rankings-table th:nth-child(4),
+.individual-rankings-table td:nth-child(4) {
+    width: 100px;
+    text-align: center;
+}
+
+.individual-rankings-table th:nth-child(5),
+.individual-rankings-table td:nth-child(5) {
+    width: 120px;
+    text-align: center;
+}
+
+.individual-rankings-table th:last-child,
+.individual-rankings-table td:last-child {
+    width: 140px;
+    text-align: center;
+}
+
+.stat-item {
+    padding: 1rem;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+    margin: 0.5rem 0;
+}
+
+.rank-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 50%;
+    font-weight: bold;
+    color: white;
+    min-width: 2rem;
+    text-align: center;
+}
+
+.rank-1 { background: linear-gradient(145deg, #ffd700 0%, #ffed4e 100%); color: #8b4513 !important; }
+.rank-2 { background: linear-gradient(145deg, #c0c0c0 0%, #e8e8e8 100%); color: #333 !important; }
+.rank-3 { background: linear-gradient(145deg, #cd7f32 0%, #daa520 100%); color: white !important; }
+
+.rank-badge:not(.rank-1):not(.rank-2):not(.rank-3) {
+    background: linear-gradient(145deg, #6c757d 0%, #adb5bd 100%);
+}
+
+.points-badge {
+    background: linear-gradient(145deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-weight: bold;
+    display: inline-block;
+    min-width: 50px;
+    text-align: center;
+}
+
+.tiles-count {
+    background: linear-gradient(145deg, #17a2b8 0%, #6f42c1 100%);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-weight: bold;
+    display: inline-block;
+    min-width: 40px;
+    text-align: center;
+}
+
+.team-link {
+    color: var(--rs-gold);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.team-link:hover {
+    color: #ffd700;
+    text-decoration: underline;
+}
+
+.btn-sm {
+    white-space: nowrap;
+}
+</style>
+{% endblock %}

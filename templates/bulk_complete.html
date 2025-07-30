@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Complete Quest{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h3>⚡ Bulk Quest Completion</h3>
+                <p class="mb-0">Complete a quest for multiple adventurers at once</p>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="task_id" class="form-label">Select Quest</label>
+                            <select class="form-select" id="task_id" name="task_id" required>
+                                <option value="">Choose a quest...</option>
+                                {% for task in tasks %}
+                                <option value="{{ task.id }}">
+                                    {{ task.name }} ({{ task.points }} XP)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">Quest Details</label>
+                            <div id="task-details" class="form-control" style="height: auto; min-height: 38px; background-color: rgba(244, 228, 188, 0.5);">
+                                <em>Select a quest to see details</em>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Select Adventurers</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="select-all">
+                                    <label class="form-check-label" for="select-all">
+                                        <strong>Select All Adventurers</strong>
+                                    </label>
+                                </div>
+                                <hr>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="select-none">
+                                    <label class="form-check-label" for="select-none">
+                                        <strong>Deselect All</strong>
+                                    </label>
+                                </div>
+                                <hr>
+                            </div>
+                        </div>
+                        
+                        <div class="row" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--rs-light-brown); border-radius: 6px; padding: 15px;">
+                            {% for team in competitors|groupby('team.name') %}
+                            <div class="col-md-6 mb-3">
+                                <h6 style="color: var(--rs-gold); border-bottom: 1px solid var(--rs-gold); padding-bottom: 5px;">
+                                    🛡️ {{ team.grouper }}
+                                </h6>
+                                {% for competitor in team.list %}
+                                <div class="form-check">
+                                    <input class="form-check-input competitor-checkbox" type="checkbox" 
+                                           name="competitor_ids" value="{{ competitor.id }}" 
+                                           id="competitor-{{ competitor.id }}">
+                                    <label class="form-check-label" for="competitor-{{ competitor.id }}">
+                                        {{ competitor.name }} 
+                                        <small class="text-muted">({{ competitor.total_points }} XP)</small>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('view_completions') }}" class="btn btn-secondary me-md-2">
+                            ↩️ Back to Completions
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            ⚡ Complete Quest for Selected
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Instructions -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5>📋 Instructions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 style="color: var(--rs-gold);">How to Use:</h6>
+                        <ol style="color: var(--rs-dark-brown);">
+                            <li>Select the quest you want to complete</li>
+                            <li>Choose which adventurers completed it</li>
+                            <li>Click "Complete Quest for Selected"</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 style="color: var(--rs-gold);">Notes:</h6>
+                        <ul style="color: var(--rs-dark-brown);">
+                            <li>Duplicate completions will be skipped</li>
+                            <li>All completions get the same timestamp</li>
+                            <li>Rankings will update automatically</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Task details data
+const taskDetails = {
+    {% for task in tasks %}
+    {{ task.id }}: {
+        name: "{{ task.name }}",
+        description: "{{ task.description or 'No description provided' }}",
+        points: {{ task.points }}
+    },
+    {% endfor %}
+};
+
+// Update task details when selection changes
+document.getElementById('task_id').addEventListener('change', function() {
+    const taskId = this.value;
+    const detailsDiv = document.getElementById('task-details');
+    
+    if (taskId && taskDetails[taskId]) {
+        const task = taskDetails[taskId];
+        detailsDiv.innerHTML = `
+            <strong>${task.name}</strong><br>
+            <small>XP Reward: <span class="gold">${task.points} points</span></small><br>
+            <small>${task.description}</small>
+        `;
+    } else {
+        detailsDiv.innerHTML = '<em>Select a quest to see details</em>';
+    }
+});
+
+// Select all functionality
+document.getElementById('select-all').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.competitor-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+    });
+    
+    // Uncheck select-none if select-all is checked
+    if (this.checked) {
+        document.getElementById('select-none').checked = false;
+    }
+});
+
+// Select none functionality
+document.getElementById('select-none').addEventListener('change', function() {
+    if (this.checked) {
+        const checkboxes = document.querySelectorAll('.competitor-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Uncheck select-all
+        document.getElementById('select-all').checked = false;
+        
+        // Uncheck self after a brief moment
+        setTimeout(() => {
+            this.checked = false;
+        }, 100);
+    }
+});
+
+// Update select-all state when individual checkboxes change
+document.querySelectorAll('.competitor-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const allCheckboxes = document.querySelectorAll('.competitor-checkbox');
+        const checkedCheckboxes = document.querySelectorAll('.competitor-checkbox:checked');
+        const selectAllCheckbox = document.getElementById('select-all');
+        
+        if (checkedCheckboxes.length === allCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+        } else {
+            selectAllCheckbox.checked = false;
+        }
+    });
+});
+</script>
+{% endblock %}

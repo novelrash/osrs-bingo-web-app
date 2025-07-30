@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Team{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>🛡️ Edit Team: {{ team.name }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="name" class="form-label">Team Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ team.name }}" required 
+                               placeholder="Enter team name">
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('team_details', team_id=team.id) }}" class="btn btn-secondary me-md-2">
+                            ↩️ Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            💾 Update Team
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Info -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Team Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Current Points:</strong><br>
+                        <span class="gold">{{ team.total_points }} XP</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Members:</strong><br>
+                        {{ team.members|length }} adventurers
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Created:</strong><br>
+                        Team #{{ team.id }}
+                    </div>
+                </div>
+                
+                {% if team.members %}
+                <hr>
+                <h6>Team Members:</h6>
+                <ul class="list-unstyled">
+                    {% for member in team.members %}
+                    <li>
+                        <a href="{{ url_for('competitor_details', competitor_id=member.id) }}" 
+                           style="color: var(--rs-dark-brown); text-decoration: none;">
+                            ⚔️ {{ member.name }} ({{ member.total_points }} XP)
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Danger Zone -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card" style="border-color: var(--rs-dark-red);">
+            <div class="card-header" style="background: linear-gradient(180deg, var(--rs-dark-red) 0%, #660000 100%); color: var(--rs-parchment);">
+                <h5>⚠️ Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Delete Team:</strong> This action cannot be undone.</p>
+                {% if team.members %}
+                <p class="text-muted">
+                    <small>⚠️ Cannot delete team with members. Please reassign or remove all members first.</small>
+                </p>
+                <button class="btn btn-danger" disabled>🗑️ Delete Team</button>
+                {% else %}
+                <form method="POST" action="{{ url_for('delete_team', team_id=team.id) }}" 
+                      onsubmit="return confirm('Are you sure you want to delete this team? This action cannot be undone!')">
+                    <button type="submit" class="btn btn-danger">🗑️ Delete Team</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

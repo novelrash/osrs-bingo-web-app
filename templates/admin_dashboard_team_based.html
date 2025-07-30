@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="leaderboard-title">🔧 Admin Dashboard</h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ total_teams }}</h2>
+                <p class="mb-0"><i class="fas fa-users"></i> Teams</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-success">{{ total_competitors }}</h2>
+                <p class="mb-0"><i class="fas fa-user"></i> Players</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-info">{{ total_tiles }}</h2>
+                <p class="mb-0"><i class="fas fa-tasks"></i> Tiles</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-warning">{{ total_completions }}</h2>
+                <p class="mb-0"><i class="fas fa-check"></i> Approved</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-danger">{{ pending_completions }}</h2>
+                <p class="mb-0"><i class="fas fa-clock"></i> Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-secondary">{{ total_completions + pending_completions }}</h2>
+                <p class="mb-0"><i class="fas fa-list"></i> Total</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>⚡ Quick Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('add_team') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i><br>Add Team
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('add_competitor') }}" class="btn btn-success w-100">
+                            <i class="fas fa-user-plus"></i><br>Add Player
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('add_tile') }}" class="btn btn-info w-100">
+                            <i class="fas fa-tasks"></i><br>Add Tile
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('view_completions') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-list"></i><br>View Completions
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('tile_overview') }}" class="btn btn-secondary w-100">
+                            <i class="fas fa-eye"></i><br>View Tiles
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('index') }}" class="btn btn-dark w-100">
+                            <i class="fas fa-trophy"></i><br>Leaderboard
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Management Actions -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-3"><i class="fas fa-cogs"></i> Management Actions</h6>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('manage_tiles') }}" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-tasks"></i><br>Manage Tiles
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('manage_teams') }}" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-users"></i><br>Manage Teams
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{{ url_for('manage_competitors') }}" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-user-friends"></i><br>Manage Players
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Approvals -->
+{% if pending_completions > 0 %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h4>⏳ Pending Approvals ({{ pending_completions }})</h4>
+            </div>
+            <div class="card-body">
+                {% set pending_list = recent_completions|selectattr('admin_approved', 'equalto', False)|list %}
+                {% if pending_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Tile</th>
+                                <th>Points</th>
+                                <th>Submitted By</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in pending_list %}
+                            <tr>
+                                <td>{{ completion.team.name }}</td>
+                                <td>
+                                    <strong>{{ completion.tile.name }}</strong>
+                                    {% if completion.tile.description %}
+                                    <br><small class="text-muted">{{ completion.tile.description[:50] }}{% if completion.tile.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ completion.tile.points }}</span>
+                                </td>
+                                <td>
+                                    {% if completion.submitted_by_player %}
+                                    {{ completion.submitted_by_player.name }}
+                                    {% else %}
+                                    <em class="text-muted">Admin</em>
+                                    {% endif %}
+                                </td>
+                                <td>{{ completion.completed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('approve_completion', completion_id=completion.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('remove_completion', completion_id=completion.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Remove this submission?')">
+                                            <i class="fas fa-trash"></i> Reject
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Admin Tile Completion -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>🔧 Admin Tile Completion</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin_complete_tile') }}" class="row">
+                    <div class="col-md-4">
+                        <select name="team_id" class="form-control" required>
+                            <option value="">Select Team...</option>
+                            {% for team in recent_completions|map(attribute='team')|unique|list %}
+                            <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="tile_id" class="form-control" required>
+                            <option value="">Select Tile...</option>
+                            {% for tile in recent_completions|map(attribute='tile')|unique|list %}
+                            <option value="{{ tile.id }}">{{ tile.name }} ({{ tile.points }} pts)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-check"></i> Complete Tile (Admin)
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Admin completions are automatically approved and don't require user submission.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>📊 Recent Activity</h4>
+            </div>
+            <div class="card-body">
+                {% if recent_completions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Tile</th>
+                                <th>Points</th>
+                                <th>Submitted By</th>
+                                <th>Completed</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in recent_completions %}
+                            <tr>
+                                <td>{{ completion.team.name }}</td>
+                                <td>
+                                    <strong>{{ completion.tile.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="points-badge">{{ completion.tile.points }}</span>
+                                </td>
+                                <td>
+                                    {% if completion.submitted_by_player %}
+                                    {{ completion.submitted_by_player.name }}
+                                    {% else %}
+                                    <em class="text-muted">Admin</em>
+                                    {% endif %}
+                                </td>
+                                <td>{{ completion.completed_at.strftime('%m/%d %H:%M') }}</td>
+                                <td>
+                                    {% if completion.admin_approved %}
+                                    <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not completion.admin_approved %}
+                                    <form method="POST" action="{{ url_for('approve_completion', completion_id=completion.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <form method="POST" action="{{ url_for('remove_completion', completion_id=completion.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Remove this completion?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>No tile completions yet. Start adding tiles and players to get the bingo going!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Changes Notice -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5>🔄 New Team-Based System</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-users"></i> Team Completions</h6>
+                        <ul class="small">
+                            <li>Only one completion per tile per team</li>
+                            <li>Teams earn points, not individuals</li>
+                            <li>No duplicate completions possible</li>
+                            <li>Strategic team coordination required</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-user-edit"></i> User Submissions</h6>
+                        <ul class="small">
+                            <li>Players can submit their own completions</li>
+                            <li>Submissions require admin approval</li>
+                            <li>Real-time progress tracking</li>
+                            <li>Reduced admin workload</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-shield-alt"></i> Admin Controls</h6>
+                        <ul class="small">
+                            <li>Approve/reject user submissions</li>
+                            <li>Direct admin completions (auto-approved)</li>
+                            <li>Remove any completion if needed</li>
+                            <li>Full oversight and control</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

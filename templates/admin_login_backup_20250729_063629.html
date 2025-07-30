@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - Pea Kingdom Bingo{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3>🔐 Admin Login</h3>
+                <small class="text-muted">Access the Pea Kingdom Bingo administration panel</small>
+            </div>
+            <div class="card-body">
+                <!-- Discord OAuth Login -->
+                <div class="text-center mb-4">
+                    <a href="https://runescape-comp-1753499990.auth.us-east-1.amazoncognito.com/oauth2/authorize?client_id=4ht3ihgsq8m321023el96ear54&response_type=code&scope=openid+email+profile&redirect_uri=https://peaking.fyi/admin/oauth/callback&identity_provider=Discord" 
+                       class="btn btn-discord btn-lg w-100" style="background-color: #5865F2; color: white;">
+                        <i class="fab fa-discord"></i> Sign in with Discord
+                    </a>
+                </div>
+                
+                <div class="text-center mb-3">
+                    <small class="text-muted">or use traditional login</small>
+                    <hr>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required 
+                               placeholder="Enter your admin username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required
+                               placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                </form>
+                
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        ← Back to Leaderboard
+                    </a>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt"></i> 
+                        Secure authentication powered by AWS Cognito
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Features Preview -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>🎯 Admin Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-users"></i> Team Management</h6>
+                        <ul class="small">
+                            <li>Add and manage teams</li>
+                            <li>Add players to teams</li>
+                            <li>View team statistics</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-tasks"></i> Tile Management</h6>
+                        <ul class="small">
+                            <li>Create bingo tiles</li>
+                            <li>Set point values</li>
+                            <li>Track completions</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-check-circle"></i> Bingo Control</h6>
+                        <ul class="small">
+                            <li>Mark tiles as completed</li>
+                            <li>Remove completions</li>
+                            <li>Real-time updates</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chart-bar"></i> Analytics</h6>
+                        <ul class="small">
+                            <li>Bingo statistics</li>
+                            <li>Progress tracking</li>
+                            <li>Activity monitoring</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

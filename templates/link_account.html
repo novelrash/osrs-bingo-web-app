@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Link Account - {{ user.display_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3><i class="fas fa-link"></i> Link Your Discord Account</h3>
+                    <p class="text-muted mb-0">Connect to a competitor to join the competition</p>
+                </div>
+                <div class="card-body">
+                    <!-- User Info -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    {% if user.avatar_url %}
+                                        <img src="{{ user.avatar_url }}" alt="Avatar" class="rounded-circle me-3" width="48" height="48">
+                                    {% else %}
+                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ user.display_name }}</strong><br>
+                                        <small><i class="fab fa-discord"></i> {{ user.discord_username }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if user.is_linked %}
+                        <!-- Already Linked -->
+                        <div class="alert alert-success">
+                            <h5><i class="fas fa-check-circle"></i> Account Already Linked</h5>
+                            <p class="mb-2">You are currently linked to:</p>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <strong>{{ user.competitor.name }}</strong><br>
+                                    <small class="text-muted">Team: {{ user.team.name }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mb-4">
+                            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                            </a>
+                        </div>
+
+                        <hr>
+
+                        <h5>Change Link</h5>
+                        <p class="text-muted">Want to link to a different competitor? Select one below:</p>
+                    {% endif %}
+
+                    <!-- Link Form -->
+                    {% if available_competitors %}
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="competitor_id" class="form-label">
+                                    <strong>Select Competitor to Link To:</strong>
+                                </label>
+                                <select name="competitor_id" id="competitor_id" class="form-select" required>
+                                    <option value="">Choose a competitor...</option>
+                                    {% for competitor in available_competitors %}
+                                        <option value="{{ competitor.id }}">
+                                            {{ competitor.name }} (Team: {{ competitor.team.name }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">
+                                    Select the competitor that represents you in the competition.
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-link"></i> 
+                                    {% if user.is_linked %}Update Link{% else %}Link Account{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <!-- No Available Competitors -->
+                        <div class="alert alert-warning text-center">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <h5>No Available Competitors</h5>
+                            <p class="mb-3">
+                                All competitors are already linked to Discord accounts, or no competitors have been created yet.
+                            </p>
+                            <p class="text-muted">
+                                Contact an administrator to create a new competitor or unlink an existing one.
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Help Section -->
+                    <div class="mt-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-question-circle"></i> How does linking work?</h6>
+                                <ul class="mb-0 small">
+                                    <li>Each Discord account can be linked to one competitor</li>
+                                    <li>Each competitor can only be linked to one Discord account</li>
+                                    <li>Once linked, you can submit tile completions for your team</li>
+                                    <li>Your submissions will be tracked under your competitor name</li>
+                                    <li>You can change your link at any time from this page</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-chart-bar"></i> View Leaderboard
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

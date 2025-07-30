@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Competitor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>⚔️ Edit Adventurer: {{ competitor.name }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="name" class="form-label">Adventurer Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ competitor.name }}" required 
+                               placeholder="Enter adventurer name">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="team_id" class="form-label">Team</label>
+                        <select class="form-select" id="team_id" name="team_id" required>
+                            <option value="">Choose a team...</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}" 
+                                    {% if team.id == competitor.team_id %}selected{% endif %}>
+                                {{ team.name }} ({{ team.members|length }} members)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('competitor_details', competitor_id=competitor.id) }}" 
+                           class="btn btn-secondary me-md-2">
+                            ↩️ Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            💾 Update Adventurer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Competitor Stats -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Adventurer Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Total XP:</strong><br>
+                        <span class="gold">{{ competitor.total_points }} points</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Quests Completed:</strong><br>
+                        {{ competitor.completed_tasks|length }} tasks
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Current Team:</strong><br>
+                        <a href="{{ url_for('team_details', team_id=competitor.team.id) }}" 
+                           style="color: var(--rs-dark-brown);">
+                            {{ competitor.team.name }}
+                        </a>
+                    </div>
+                </div>
+                
+                {% if competitor.completed_tasks %}
+                <hr>
+                <h6>Recent Completions:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Quest</th>
+                                <th>XP Gained</th>
+                                <th>Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for completion in competitor.completed_tasks[-5:] %}
+                            <tr>
+                                <td>{{ completion.task.name }}</td>
+                                <td><span class="gold">{{ completion.task.points }} XP</span></td>
+                                <td>{{ completion.completed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Danger Zone -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card" style="border-color: var(--rs-dark-red);">
+            <div class="card-header" style="background: linear-gradient(180deg, var(--rs-dark-red) 0%, #660000 100%); color: var(--rs-parchment);">
+                <h5>⚠️ Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Delete Adventurer:</strong> This will remove the adventurer and ALL their quest completions.</p>
+                <p class="text-muted">
+                    <small>⚠️ This action cannot be undone and will affect team rankings!</small>
+                </p>
+                <form method="POST" action="{{ url_for('delete_competitor', competitor_id=competitor.id) }}" 
+                      onsubmit="return confirm('Are you sure you want to delete {{ competitor.name }}? This will remove all their quest completions and cannot be undone!')">
+                    <button type="submit" class="btn btn-danger">🗑️ Delete Adventurer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
